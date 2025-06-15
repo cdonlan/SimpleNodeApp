@@ -1,0 +1,19 @@
+name: Test Self-Hosted Runner
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  test-job:
+    runs-on: self-hosted # Use the 'self-hosted' label
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Print a message
+        run: echo "Hello from the self-hosted runner in Azure!"
+
+      - name: Show system info
+        run: uname -a
