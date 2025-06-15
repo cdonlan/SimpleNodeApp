@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Todo App</title>
+  <style>
+    body { font-family: system-ui, sans-serif; margin: 2rem; }
+    form { margin-bottom: 1rem; }
+    ul { list-style: none; padding: 0; }
+    li { margin: .5rem 0; }
+    .done { text-decoration: line-through; color: gray; }
+    button { margin-left: .5rem; }
+  </style>
+</head>
+<body>
+  <h1>Todo List</h1>
+  <form id="todo-form">
+    <input id="todo-input" placeholder="New todo" required />
+    <button type="submit">Add</button>
+  </form>
+  <ul id="todo-list"></ul>
+
+  <script>
+    async function refresh() {
+      const res = await fetch('/api/todos');
+      const todos = await res.json();
+      const list = document.getElementById('todo-list');
+      list.innerHTML = '';
+      todos.forEach(t => {
+        const li = document.createElement('li');
+        li.className = t.done ? 'done' : '';
+        li.textContent = t.text;
+
+        const toggle = document.createElement('button');
+        toggle.textContent = t.done ? 'Undo' : 'Done';
+        toggle.onclick = async () => {
+          await fetch('/api/todos/' + t.id, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ done: !t.done })
+          });
+          refresh();
+        };
+
+        const del = document.createElement('button');
+        del.textContent = 'Delete';
+        del.onclick = async () => {
+          await fetch('/api/todos/' + t.id, { method: 'DELETE' });
+          refresh();
+        };
+
+        li.appendChild(toggle);
+        li.appendChild(del);
+        list.appendChild(li);
+      });
+    }
+
+    document.getElementById('todo-form').addEventListener('submit', async e => {
+      e.preventDefault();
+      const input = document.getElementById('todo-input');
+      await fetch('/api/todos', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: input.value })
+      });
+      input.value = '';
+      refresh();
+    });
+
+    refresh();
+  </script>
+</body>
+</html>
