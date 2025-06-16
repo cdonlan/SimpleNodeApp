@@ -1,0 +1,14 @@
+# .github/workflows/call-reusable-workflow.yml
+name: Call Reusable Workflow
+on:
+  workflow_dispatch:
+    inputs:
+      message:
+        description: 'Message to pass to reusable workflow'
+        required: true
+        default: 'Hello, world!'
+jobs:
+  call:
+    uses: ./.github/workflows/03-resuable-workflow.yml
+    with:
+      my-input: ${{ github.event.inputs.message }}
