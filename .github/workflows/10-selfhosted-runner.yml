@@ -1,4 +1,5 @@
-name: 05 Test Self-Hosted Runner
+name: 10
+ Test Self-Hosted Runner
 
 on:
   push:
