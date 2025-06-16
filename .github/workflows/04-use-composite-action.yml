@@ -1,4 +1,4 @@
-name: 05 Test Self-Hosted Runner
+name: 04 Use Composite Action
 on:
   workflow_dispatch:
 
