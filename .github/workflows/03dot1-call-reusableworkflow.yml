@@ -3,6 +3,6 @@ name: Call Reusable Workflow
 on: [push]
 jobs:
   call:
-    uses: ./.github/workflows/reusable-workflow.yml
+    uses: ./.github/workflows/03-resuable-workflow.yml
     with:
       my-input: "Hello, world!"
