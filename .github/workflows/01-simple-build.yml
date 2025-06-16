@@ -1,12 +1,18 @@
 name: 01 Build Node App
 
 on:
-  push:
+  pull_request:
+    types: [closed]
     branches:
       - main
+    paths-ignore:
+      - '**/README.md'
+    # Only run if the PR is merged
+    # This requires a conditional in the job (see below)
 
 jobs:
   build:
+    if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
 
     steps:
