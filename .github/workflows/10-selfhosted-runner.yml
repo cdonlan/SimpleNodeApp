@@ -8,7 +8,7 @@ on:
 
 jobs:
   test-job:
-    runs-on: self-hosted # Use the 'self-hosted' label
+    runs-on: linux-runner-01
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
