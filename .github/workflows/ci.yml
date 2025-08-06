@@ -1,0 +1,46 @@
+name: CI - Build and Test
+
+on:
+  push:
+    branches: [ main, master, develop ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Build application
+      run: npm run build
+
+    - name: Test Docker build
+      run: docker build -t simplenodeapp:test .
+
+    - name: Test Docker run
+      run: |
+        docker run -d -p 3000:3000 --name test-app simplenodeapp:test
+        sleep 5
+        # Test if the app is responding
+        curl -f http://localhost:3000 || exit 1
+        docker stop test-app
+        docker rm test-app
+
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: build-artifacts
+        path: dist/
