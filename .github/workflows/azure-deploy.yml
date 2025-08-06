@@ -1,0 +1,64 @@
+name: Azure Container and AKS Deployment
+
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+env:
+  IMAGE_NAME: ${{ vars.CONTAINER_IMAGE_NAME || 'simplenodeapp' }}
+  REGISTRY: ${{ vars.ACR_NAME }}.azurecr.io
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    environment: production
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Build application
+      run: npm run build
+
+    - name: Azure Login
+      uses: azure/login@v2
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+    - name: Login to Azure Container Registry
+      uses: azure/docker-login@v2
+      with:
+        login-server: ${{ vars.ACR_NAME }}.azurecr.io
+        username: ${{ secrets.ACR_USERNAME }}
+        password: ${{ secrets.ACR_PASSWORD }}
+
+    - name: Build and push Docker image
+      uses: docker/build-push-action@v6
+      with:
+        context: .
+        push: true
+        tags: |
+          ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.run_number }}
+          ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+
+    - name: Set AKS context
+      uses: azure/k8s-set-context@v4
+      with:
+        method: service-principal
+        resource-group: ${{ vars.AKS_RESOURCE_GROUP }}
+        cluster-name: ${{ vars.AKS_CLUSTER_NAME }}
+
+    - name: Deploy to AKS
+      run: |
+        kubectl set image deployment/${{ env.IMAGE_NAME }} ${{ env.IMAGE_NAME }}=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.run_number }} --record || true
+        kubectl rollout status deployment/${{ env.IMAGE_NAME }} || true
